@@ -14,7 +14,6 @@ public class IntListExercises {
             head.first += c;
             head = head.rest;
         }
-        head.first += c;
     }
 
     /**
@@ -79,6 +78,6 @@ public class IntListExercises {
             lst.first *= lst.first;
         }
 
-        return currElemIsPrime || squarePrimes(lst.rest);
+        return squarePrimes(lst.rest) || currElemIsPrime;
     }
 }
