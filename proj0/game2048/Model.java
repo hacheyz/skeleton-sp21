@@ -1,5 +1,6 @@
 package game2048;
 
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.Observable;
 
@@ -110,14 +111,63 @@ public class Model extends Observable {
         boolean changed;
         changed = false;
 
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
+        if (side != Side.NORTH)
+            board.setViewingPerspective(side);
+
+        int size = board.size();
+        for (int col = 0; col < size; col++) {
+            boolean colChanged = tiltOneCol(col);
+            changed = changed || colChanged;
+        }
+        if (side != Side.NORTH) {
+            board.setViewingPerspective(Side.NORTH);
+        }
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
+        return changed;
+    }
+
+    private boolean tiltOneCol(int col) {
+        boolean changed;
+        changed = false;
+        int size = board.size();
+        boolean[] fromMerge = new boolean[size];
+        Arrays.fill(fromMerge, false);
+        
+        boolean[] occupied = new boolean[size];
+        for (int row = 0; row < size; row++) {
+            occupied[row] = board.tile(col, row) != null;
+        }
+
+        for (int row = 2; row >= 0; row--) {
+            if(occupied[row]) {
+                Tile tile = board.tile(col, row);
+                int moveTo = -1; // -1 means TILE can move to nowhere
+                for (int upperRow = row + 1; upperRow < size; upperRow++) {
+                    if (!occupied[upperRow] ||
+                            board.tile(col, upperRow).value() == tile.value() && !fromMerge[upperRow]) {
+                        moveTo = upperRow;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                if (moveTo != -1) {
+                    boolean merged = board.move(col, moveTo, tile);
+                    occupied[row] = false;
+                    occupied[moveTo] = true;
+                    if (merged) {
+                        score += 2*tile.value();
+                        fromMerge[moveTo] = true;
+                    }
+                    changed = true;
+                }
+            }
+        }
+
         return changed;
     }
 
